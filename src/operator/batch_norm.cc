@@ -6,6 +6,7 @@
 */
 
 #include "./batch_norm-inl.h"
+#include <nnvm/op_attr_types.h>
 #if MXNET_USE_MKL2017 == 1
 #include <mkl_memory.h>
 #include "./mkl/mkl_memory-inl.h"
@@ -43,6 +44,17 @@ MXNET_REGISTER_OP_PROPERTY(BatchNorm, BatchNormProp)
 .describe("Apply batch normalization to input.")
 .add_argument("data", "Symbol", "Input data to batch normalization")
 .add_arguments(BatchNormParam::__FIELDS__());
+
+NNVM_REGISTER_OP(BatchNorm)
+.set_attr<nnvm::FSetInputVariableAttrs>("FSetInputVariableAttrs",
+    [](const nnvm::NodeAttrs& attrs, nnvm::NodePtr var, const int index) {
+      if (var->attrs.dict.find("__init__") != var->attrs.dict.end()) return;
+      if (index == 3) {
+        var->attrs.dict["__init__"] = "[\"zero\", {}]";
+      } else if (index == 4) {
+        var->attrs.dict["__init__"] = "[\"one\", {}]";
+      }
+    });
 
 }  // namespace op
 }  // namespace mxnet
